@@ -63,9 +63,9 @@ class GenAiProviderFusara implements GenAiProvider {
         .with('illustration', () => 'illustration')
         .exhaustive();
 
-      const newDescription = input.isDescriptionEnhanced
-        ? await this.enhanceDescription(input.description, input.style)
-        : `${styleDescription} ${input.description}`;
+      const newDescription = input.isPromptEnhanced
+        ? await this.enhanceDescription(input.prompt, input.style)
+        : `${styleDescription} ${input.prompt}`;
 
       const data = {
         __type: 1,

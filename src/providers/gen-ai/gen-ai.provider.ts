@@ -4,8 +4,8 @@ export interface GenAiProvider {
 }
 
 export type GenerateImageInput = {
-  description: string;
-  isDescriptionEnhanced: boolean;
+  prompt: string;
+  isPromptEnhanced: boolean;
   style: Style;
   orientation: Orientation;
   completionCallbackUrl: string;

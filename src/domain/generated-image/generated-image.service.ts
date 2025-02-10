@@ -4,7 +4,6 @@ export interface GeneratedImageService {
   createImage(input: CreateImageInput): Promise<GeneratedImage>;
   getImageById(imageId: string): Promise<GeneratedImage>;
   getImageByGenerationTaskId(taskId: string): Promise<GeneratedImage>;
-  getPostersCount(userId: string): Promise<number>;
   updateImage(input: GeneratedImage): Promise<GeneratedImage>;
 
   initializeImageGeneration(taskId: string, imageId: string): Promise<void>;
@@ -14,8 +13,8 @@ export interface GeneratedImageService {
 
 export type CreateImageInput = {
   id?: string;
-  description: string;
-  isDescriptionEnhanced: boolean;
+  prompt: string;
+  isPromptEnhanced: boolean;
   style: Style;
   orientation: Orientation;
   userId: string;
