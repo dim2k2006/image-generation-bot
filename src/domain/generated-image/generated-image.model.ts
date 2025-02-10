@@ -8,11 +8,11 @@ export type GeneratedImage = {
   createdAt: string;
   generationTaskId: string;
   generationStatus: GenerationStatus;
-}
+};
 
 export type Style = 'photo' | 'illustration';
 
-export type Orientation = 'landscape' | 'portrait';
+export type Orientation = 'vertical' | 'horizontal';
 
 export type Image = {
   id: string;
