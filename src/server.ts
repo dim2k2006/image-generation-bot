@@ -58,17 +58,6 @@ type GenerationCompletedRequestBody = {
 // 200 - Failed
 type StatusId = 10 | 20 | 100 | 200;
 
-// const CreateUserBodySchema = {
-//   type: 'object',
-//   required: ['externalId', 'firstName'],
-//   properties: {
-//     externalId: { type: 'string' },
-//     firstName: { type: 'string' },
-//     lastName: { type: 'string' },
-//   },
-//   additionalProperties: false,
-// };
-
 const GenerationCompletedRequestBodySchema = {
   type: 'object',
   required: ['taskId', 'statusId'],
