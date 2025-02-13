@@ -3,12 +3,14 @@ import { GeneratedImageRepository } from './generated-image.repository';
 import { GeneratedImageService, CreateImageInput } from './generated-image.service';
 import { GenAiProvider } from '../../providers/gen-ai';
 import { ExceptionProvider } from '../../providers/exception';
+import { ChatProvider } from '../../providers/chat';
 import { GeneratedImage } from './generated-image.model';
 
 type ConstructorInput = {
   generatedImageRepository: GeneratedImageRepository;
   genAiProvider: GenAiProvider;
   exceptionProvider: ExceptionProvider;
+  chatProvider: ChatProvider;
   generationCompleteCallbackUrl: string;
 };
 
@@ -19,6 +21,8 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
 
   private exceptionProvider: ExceptionProvider;
 
+  private chatProvider: ChatProvider;
+
   private readonly generationCompleteCallbackUrl: string;
 
   constructor({
@@ -26,12 +30,15 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
     genAiProvider,
     generationCompleteCallbackUrl,
     exceptionProvider,
+    chatProvider,
   }: ConstructorInput) {
     this.generatedImageRepository = generatedImageRepository;
 
     this.genAiProvider = genAiProvider;
 
     this.exceptionProvider = exceptionProvider;
+
+    this.chatProvider = chatProvider;
 
     this.generationCompleteCallbackUrl = generationCompleteCallbackUrl;
   }
@@ -92,38 +99,52 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
   }
 
   async completeImageGeneration(taskId: string): Promise<void> {
-    const poster = await this.generatedImageRepository.getImageByGenerationTaskId(taskId);
+    const generatedImage = await this.generatedImageRepository.getImageByGenerationTaskId(taskId);
 
-    if (poster.generationStatus !== 'processing') {
+    if (generatedImage.generationStatus !== 'processing') {
       return;
     }
 
-    const genAiResponse = await this.genAiProvider.getGeneratedImage(poster.generationTaskId);
+    const genAiResponse = await this.genAiProvider.getGeneratedImage(generatedImage.generationTaskId);
 
     await this.generatedImageRepository.updateImage({
-      ...poster,
+      ...generatedImage,
       images: genAiResponse.images,
       generationStatus: 'completed',
     });
+
+    const message = `
+Here is the generated image for the prompt: "${generatedImage.prompt}"
+
+${genAiResponse.images.map((image) => image.url).join('\n')}
+    `;
+
+    await this.chatProvider.sendMessages(generatedImage.chatId, [message]);
   }
 
   async failImageGeneration(taskId: string): Promise<void> {
-    const poster = await this.generatedImageRepository.getImageByGenerationTaskId(taskId);
+    const image = await this.generatedImageRepository.getImageByGenerationTaskId(taskId);
 
-    if (poster.generationStatus !== 'processing') {
+    if (image.generationStatus !== 'processing') {
       return;
     }
 
     await this.generatedImageRepository.updateImage({
-      ...poster,
+      ...image,
       generationStatus: 'failed',
     });
 
+    const message = `
+Failed to generate image for the prompt: "${image.prompt}"
+    `;
+
+    await this.chatProvider.sendMessages(image.chatId, [message]);
+
     this.exceptionProvider.captureException(
-      new Error(`Failed to generate ai poster with id ${poster.id} for task with id ${taskId}`),
-      `Failed to generate ai poster with id ${poster.id} for task with id ${taskId}`,
+      new Error(`Failed to generate ai poster with id ${image.id} for task with id ${taskId}`),
+      `Failed to generate ai poster with id ${image.id} for task with id ${taskId}`,
       {
-        posterId: poster.id,
+        posterId: image.id,
         taskId,
       },
     );
