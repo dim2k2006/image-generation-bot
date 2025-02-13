@@ -116,7 +116,10 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
     const message = `
 Here is the generated image for the prompt: "${generatedImage.prompt}"
 
-${genAiResponse.images.map((image) => image.url).join('\n')}
+1. ${genAiResponse.images[0]?.url}
+2. ${genAiResponse.images[1]?.url}
+3. ${genAiResponse.images[2]?.url}
+4. ${genAiResponse.images[3]?.url}
     `;
 
     await this.chatProvider.sendMessages(generatedImage.chatId, [message]);
