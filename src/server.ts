@@ -2,6 +2,9 @@ import { config } from 'dotenv';
 import fastify from 'fastify';
 import { webhookCallback } from 'grammy';
 import * as Sentry from '@sentry/node';
+import toString from 'lodash/toString';
+import identity from 'lodash/identity';
+import { match } from 'ts-pattern';
 import { buildConfig, buildContainer } from './container';
 import buildBot from './bot';
 
@@ -43,6 +46,65 @@ server.post('/webhook', async (request, reply) => {
     reply.status(500).send(error.message);
   }
 });
+
+type GenerationCompletedRequestBody = {
+  taskId: number;
+  statusId: StatusId;
+};
+
+// 10 - Initial
+// 20 - Processing
+// 100 - Succeeded
+// 200 - Failed
+type StatusId = 10 | 20 | 100 | 200;
+
+// const CreateUserBodySchema = {
+//   type: 'object',
+//   required: ['externalId', 'firstName'],
+//   properties: {
+//     externalId: { type: 'string' },
+//     firstName: { type: 'string' },
+//     lastName: { type: 'string' },
+//   },
+//   additionalProperties: false,
+// };
+
+const GenerationCompletedRequestBodySchema = {
+  type: 'object',
+  required: ['taskId', 'statusId'],
+  properties: {
+    taskId: { type: 'number' },
+    statusId: { type: 'number' },
+  },
+  additionalProperties: false,
+};
+
+server.post<{ Body: GenerationCompletedRequestBody; Reply: string }>(
+  '/webhooks/generated-images/generation-completed',
+  { schema: { body: GenerationCompletedRequestBodySchema } },
+  async (request, reply) => {
+    try {
+      const { taskId: taskIdNumber, statusId } = request.body;
+
+      const taskId = toString(taskIdNumber);
+
+      const process = match(statusId)
+        .with(10, () => identity)
+        .with(20, () => identity)
+        .with(100, () => container.generatedImageService.completeImageGeneration.bind(container.generatedImageService))
+        .with(200, () => container.generatedImageService.failImageGeneration.bind(container.generatedImageService))
+        .exhaustive();
+
+      await process(taskId);
+
+      reply.send('OK');
+    } catch (error) {
+      console.error(error);
+
+      reply.status(500).send(error.message);
+    }
+  },
+);
 
 const envPort = process.env.PORT;
 
