@@ -1,5 +1,6 @@
 import { ExceptionProvider, ExceptionProviderSentry } from '../providers/exception';
 import { GenAiProvider, GenAiProviderFusara } from '../providers/gen-ai';
+import { ChatProvider, ChatProviderTelegram } from '../providers/chat';
 import { UserRepositoryInMemory, UserService, UserServiceImpl } from '../domain/user';
 import {
   GeneratedImageRepositoryInMemory,
@@ -33,6 +34,7 @@ export type Config = {
 export function buildContainer(config: Config): Container {
   const exceptionProvider = new ExceptionProviderSentry();
   const genAiProvider = new GenAiProviderFusara({ apiKey: config.fusaraApiKey });
+  const chatProvider = new ChatProviderTelegram({ botToken: config.telegramBotToken });
 
   const userRepository = new UserRepositoryInMemory();
   const userService = new UserServiceImpl({ userRepository });
@@ -43,6 +45,7 @@ export function buildContainer(config: Config): Container {
     genAiProvider,
     generationCompleteCallbackUrl: config.generationCompleteCallbackUrl,
     exceptionProvider,
+    chatProvider,
   });
 
   return {
@@ -51,6 +54,7 @@ export function buildContainer(config: Config): Container {
     generatedImageService,
     exceptionProvider,
     genAiProvider,
+    chatProvider,
   };
 }
 
@@ -60,4 +64,5 @@ export type Container = {
   generatedImageService: GeneratedImageService;
   exceptionProvider: ExceptionProvider;
   genAiProvider: GenAiProvider;
+  chatProvider: ChatProvider;
 };
