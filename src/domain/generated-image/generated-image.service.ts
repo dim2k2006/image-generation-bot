@@ -18,5 +18,6 @@ export type CreateImageInput = {
   style: Style;
   orientation: Orientation;
   userId: string;
+  chatId: string;
   createdAt?: string;
 };

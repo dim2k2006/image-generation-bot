@@ -5,6 +5,7 @@ export type GeneratedImage = {
   orientation: Orientation;
   images: Image[];
   userId: string;
+  chatId: string;
   createdAt: string;
   generationTaskId: string;
   generationStatus: GenerationStatus;

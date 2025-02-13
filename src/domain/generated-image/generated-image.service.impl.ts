@@ -52,6 +52,7 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
       orientation: input.orientation,
       images: generatedImage.images,
       userId: input.userId,
+      chatId: input.chatId,
       generationTaskId: '',
       generationStatus: 'idle',
       createdAt: new Date().toISOString(),

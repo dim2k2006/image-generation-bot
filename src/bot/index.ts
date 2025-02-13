@@ -1,4 +1,5 @@
 import { Bot, Context, NextFunction } from 'grammy';
+import toString from 'lodash/toString';
 import { Container } from '../container';
 
 function buildBot(container: Container) {
@@ -66,6 +67,7 @@ function buildBot(container: Container) {
       style: 'photo',
       orientation: 'vertical',
       userId: user.id,
+      chatId: toString(ctx.chatId),
     });
 
     await ctx.reply('Your image is being generated. Please wait for a while. 🧙‍♂️');
