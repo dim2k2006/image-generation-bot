@@ -115,7 +115,6 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
 
     const photos = genAiResponse.images.map((image, index) => ({
       url: image.url,
-      caption: `Version #${index + 1}`,
       replyMarkup: [
         [{ text: 'Заказать печать', url: 'https://example.com' }],
         [{ text: 'Купить цифровое изображение', url: 'https://example.com' }],
