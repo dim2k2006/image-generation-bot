@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import random from 'lodash/random';
-import { ChatProvider, Photo } from './chat.provider';
+import { ChatProvider, SendPhotosInput } from './chat.provider';
 import { handleAxiosError } from '../../utils/axios';
 
 type ConstructorInput = {
@@ -58,40 +58,21 @@ class ChatProviderTelegram implements ChatProvider {
     }
   }
 
-  async sendPhotos(chatId: string, photos: Photo[]): Promise<void> {
-    const iter = async (photosList: Photo[]): Promise<void> => {
-      if (photosList.length === 0) {
-        return;
-      }
-
-      const photo = photosList[0];
-
-      if (!photo.url) {
-        return iter(photosList.slice(1));
-      }
-
-      await this.sendPhotoByUrl(chatId, photo);
-
-      await this.sleep(random(1000, 3000));
-
-      return iter(photosList.slice(1));
-    };
-
-    await iter(photos);
-  }
-
-  async sendPhotoByUrl(chatId: string, photo: Photo): Promise<void> {
-    const url = `/bot${this.botToken}/sendPhoto`;
+  async sendPhotos({ chatId, photos, replyMarkup = [] }: SendPhotosInput): Promise<void> {
+    const url = `/bot${this.botToken}/sendMediaGroup`;
 
     try {
-      const replyMarkup = photo.replyMarkup ?? [];
+      const mediaItems = photos.map((photo) => ({
+        type: 'photo',
+        media: photo.url,
+        caption: photo.caption,
+      }));
 
       const reply_markup = replyMarkup.length > 0 ? { inline_keyboard: replyMarkup } : undefined;
 
       await this.client.post(url, {
         chat_id: chatId,
-        photo: photo.url,
-        caption: photo.caption,
+        media: mediaItems,
         reply_markup,
       });
     } catch (error) {

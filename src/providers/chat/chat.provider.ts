@@ -1,12 +1,17 @@
 export interface ChatProvider {
   sendMessages(chatId: string, messages: string[]): Promise<void>;
-  sendPhotos(chatId: string, photos: Photo[]): Promise<void>;
+  sendPhotos(input: SendPhotosInput): Promise<void>;
 }
+
+export type SendPhotosInput = {
+  chatId: string;
+  photos: Photo[];
+  replyMarkup?: ReplyMarkupItem[];
+};
 
 export type Photo = {
   url: string;
   caption?: string;
-  replyMarkup?: ReplyMarkupItem[];
 };
 
 type ReplyMarkupItem = {
