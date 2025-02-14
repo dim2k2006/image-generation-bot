@@ -70,7 +70,7 @@ class ChatProviderTelegram implements ChatProvider {
         return iter(photosList.slice(1));
       }
 
-      await this.sendPhotoByUrl(chatId, photo.url, photo.caption);
+      await this.sendPhotoByUrl(chatId, photo);
 
       await this.sleep(random(1000, 3000));
 
@@ -80,14 +80,19 @@ class ChatProviderTelegram implements ChatProvider {
     await iter(photos);
   }
 
-  async sendPhotoByUrl(chatId: string, photoUrl: string, caption?: string): Promise<void> {
+  async sendPhotoByUrl(chatId: string, photo: Photo): Promise<void> {
     const url = `/bot${this.botToken}/sendPhoto`;
 
     try {
+      const replyMarkup = photo.replyMarkup ?? [];
+
+      const reply_markup = replyMarkup.length > 0 ? { inline_keyboard: replyMarkup } : undefined;
+
       await this.client.post(url, {
         chat_id: chatId,
-        photo: photoUrl,
-        caption,
+        photo: photo.url,
+        caption: photo.caption,
+        reply_markup,
       });
     } catch (error) {
       return handleAxiosError(error, `${this.baseUrl}${url}`);

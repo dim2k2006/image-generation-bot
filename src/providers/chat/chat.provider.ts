@@ -6,4 +6,10 @@ export interface ChatProvider {
 export type Photo = {
   url: string;
   caption?: string;
+  replyMarkup?: ReplyMarkupItem[];
 };
+
+type ReplyMarkupItem = {
+  text: string;
+  url: string;
+}[];

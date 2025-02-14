@@ -113,7 +113,14 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
       generationStatus: 'completed',
     });
 
-    const photos = genAiResponse.images.map((image, index) => ({ url: image.url, caption: `Version #${index + 1}` }));
+    const photos = genAiResponse.images.map((image, index) => ({
+      url: image.url,
+      caption: `Version #${index + 1}`,
+      replyMarkup: [
+        [{ text: 'Заказать печать', url: 'https://example.com' }],
+        [{ text: 'Купить цифровое изображение', url: 'https://example.com' }],
+      ],
+    }));
 
     await this.chatProvider.sendPhotos(generatedImage.chatId, photos);
   }
