@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import random from 'lodash/random';
-import { ChatProvider, SendPhotosInput } from './chat.provider';
+import { ChatProvider, SendPhotosInput, SendMessagesInput, Message } from './chat.provider';
 import { handleAxiosError } from '../../utils/axios';
 
 type ConstructorInput = {
@@ -26,8 +26,8 @@ class ChatProviderTelegram implements ChatProvider {
     });
   }
 
-  async sendMessages(chatId: string, messages: string[]) {
-    const iter = async (messagesList: string[]): Promise<void> => {
+  async sendMessages({ chatId, messages }: SendMessagesInput) {
+    const iter = async (messagesList: Message[]): Promise<void> => {
       if (messagesList.length === 0) {
         return;
       }
@@ -48,11 +48,21 @@ class ChatProviderTelegram implements ChatProvider {
     await iter(messages);
   }
 
-  async sendMessage(chatId: string, message: string): Promise<void> {
-    const url = `/bot${this.botToken}/sendMessage?chat_id=${chatId}&text=${message}&parse_mode=html&disable_web_page_preview=true`;
+  async sendMessage(chatId: string, message: Message): Promise<void> {
+    const url = `/bot${this.botToken}/sendMessage`;
 
     try {
-      await this.client.get(url);
+      const replyMarkup = message.replyMarkup ?? [];
+
+      const reply_markup = replyMarkup.length > 0 ? { inline_keyboard: replyMarkup } : undefined;
+
+      await this.client.post(url, {
+        chat_id: chatId,
+        text: message.text,
+        parse_mode: 'html',
+        disable_web_page_preview: true,
+        reply_markup,
+      });
     } catch (error) {
       return handleAxiosError(error, `${this.baseUrl}${url}`);
     }
@@ -68,13 +78,17 @@ class ChatProviderTelegram implements ChatProvider {
         caption: photo.caption,
       }));
 
-      const reply_markup = replyMarkup.length > 0 ? { inline_keyboard: replyMarkup } : undefined;
-
       await this.client.post(url, {
         chat_id: chatId,
         media: mediaItems,
-        reply_markup,
       });
+
+      if (replyMarkup.length > 0) {
+        await this.sendMessages({
+          chatId,
+          messages: [{ text: 'Выберите действие:', replyMarkup }],
+        });
+      }
     } catch (error) {
       return handleAxiosError(error, `${this.baseUrl}${url}`);
     }

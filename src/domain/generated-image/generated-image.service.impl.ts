@@ -143,7 +143,10 @@ class GeneratedImageServiceImpl implements GeneratedImageService {
 Failed to generate image for the prompt: "${image.prompt}"
     `;
 
-    await this.chatProvider.sendMessages(image.chatId, [message]);
+    await this.chatProvider.sendMessages({
+      chatId: image.chatId,
+      messages: [{ text: message }],
+    });
 
     this.exceptionProvider.captureException(
       new Error(`Failed to generate ai poster with id ${image.id} for task with id ${taskId}`),
