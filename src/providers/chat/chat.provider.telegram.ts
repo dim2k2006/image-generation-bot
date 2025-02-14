@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import random from 'lodash/random';
-import { ChatProvider } from './chat.provider';
+import { ChatProvider, Photo } from './chat.provider';
 import { handleAxiosError } from '../../utils/axios';
 
 type ConstructorInput = {
@@ -53,6 +53,42 @@ class ChatProviderTelegram implements ChatProvider {
 
     try {
       await this.client.get(url);
+    } catch (error) {
+      return handleAxiosError(error, `${this.baseUrl}${url}`);
+    }
+  }
+
+  async sendPhotos(chatId: string, photos: Photo[]): Promise<void> {
+    const iter = async (photosList: Photo[]): Promise<void> => {
+      if (photosList.length === 0) {
+        return;
+      }
+
+      const photo = photosList[0];
+
+      if (!photo.url) {
+        return iter(photosList.slice(1));
+      }
+
+      await this.sendPhotoByUrl(chatId, photo.url, photo.caption);
+
+      await this.sleep(random(1000, 3000));
+
+      return iter(photosList.slice(1));
+    };
+
+    await iter(photos);
+  }
+
+  async sendPhotoByUrl(chatId: string, photoUrl: string, caption?: string): Promise<void> {
+    const url = `/bot${this.botToken}/sendPhoto`;
+
+    try {
+      await this.client.post(url, {
+        chat_id: chatId,
+        photo: photoUrl,
+        caption,
+      });
     } catch (error) {
       return handleAxiosError(error, `${this.baseUrl}${url}`);
     }
